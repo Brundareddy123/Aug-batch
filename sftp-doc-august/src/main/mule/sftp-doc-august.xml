@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="de39b38b-e948-4717-bbc9-e17fd3d1bd8c" >
+		<sftp:connection host="${sftp.host}" username="${secures::sftp.username}" password="${secures::sftp.password}" port="${sftp.port}"/>
+	</sftp:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="9b142aa1-a928-4aa4-8be8-00238c5acf2f" file="dev.properties" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="bac6d076-e67e-4f94-8886-3c576a68c1a3" file="dev.properties" key="Brunda@123" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<sftp:config name="SFTP_Config1" doc:name="SFTP Config" doc:id="2fc4c7b3-3f85-4c4b-a849-c39e57679ac9" >
+		<sftp:connection workingDir="/output" host="${sftp.host}" port="${sftp.port}" username="${sftp.username}" password="${sftp.password}" />
+	</sftp:config>
+	<flow name="sftp-doc-augustFlow" doc:id="823c32d6-8761-4ad3-96e7-58cf7af81905" >
+		<scheduler doc:name="Scheduler" doc:id="d8d46533-953e-4350-9c6b-a921ca93067d" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="4447d991-435e-4e1b-9e3d-975a53eda99c" />
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="77055ccb-b183-4c95-9716-9153666b3030" >
+			<sftp:list doc:name="List" doc:id="0049c53a-884c-4ce2-afbc-8a6aaef9d964" config-ref="SFTP_Config" directoryPath="/Input">
+				<sftp:matcher filenamePattern="*.json" />
+			</sftp:list>
+		</until-successful>
+		<logger level="INFO" doc:name="Logger" doc:id="7ab81317-e923-46c1-9dfb-f9fa4e2c3c24" />
+		<foreach doc:name="For Each" doc:id="44968009-c4b7-4d40-8f46-e022de45b143" >
+			<sftp:write doc:name="Write" doc:id="45bdea7d-93a3-4d1f-ace9-4129a1d7b8ae" config-ref="SFTP_Config" path="/output"/>
+		</foreach>
+	</flow>
+</mule>
